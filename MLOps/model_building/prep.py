@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 df = pd.read_csv("MLOps/data/tourism.csv")   # complete the code: path to the registered tourism.csv inside the data folder
-df.drop(columns=[CustomerID], inplace=True)   # complete the code: drop the customer identifier column, it is not a predictive feature
+df.drop(columns=["CustomerID"], inplace=True)   # complete the code: drop the customer identifier column, it is not a predictive feature
 
 # NOTE: categorical columns are intentionally left as raw strings.
 # The training pipeline one-hot-encodes them, and the Streamlit app also sends
