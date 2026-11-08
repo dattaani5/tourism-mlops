@@ -12,23 +12,24 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 import joblib
 import mlflow
 
-# Local MLflow server started by the ngrok/MLflow cell (override with an env var if needed)
-mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001"))   # FILLED
-mlflow.set_experiment("Tourism_Package_Prediction")                                  # FILLED
+# On GitHub Actions the workflow sets MLFLOW_TRACKING_URI to the runner's own MLflow server.
+# On your laptop it falls back to the local server on port 5001.
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5001"))
+mlflow.set_experiment("Tourism_Package_Prediction")
 
-# Train/test splits created by prep.py (adjust the folder if prep.py saves them elsewhere)
-Xtrain = pd.read_csv("MLOps/data/Xtrain.csv")             # FILLED
-Xtest = pd.read_csv("MLOps/data/Xtest.csv")               # FILLED
-ytrain = pd.read_csv("MLOps/data/ytrain.csv").squeeze()   # FILLED
-ytest = pd.read_csv("MLOps/data/ytest.csv").squeeze()     # FILLED
+# Train/test splits are downloaded into the working directory by the workflow
+Xtrain = pd.read_csv("Xtrain.csv")
+Xtest = pd.read_csv("Xtest.csv")
+ytrain = pd.read_csv("ytrain.csv").squeeze()
+ytest = pd.read_csv("ytest.csv").squeeze()
 
-numeric_features = [   # FILLED
+numeric_features = [
     "Age", "CityTier", "NumberOfPersonVisiting", "PreferredPropertyStar",
     "NumberOfTrips", "Passport", "OwnCar", "NumberOfChildrenVisiting",
     "MonthlyIncome", "PitchSatisfactionScore", "NumberOfFollowups", "DurationOfPitch"
 ]
 
-categorical_features = [   # FILLED
+categorical_features = [
     "TypeofContact", "Occupation", "Gender", "MaritalStatus",
     "Designation", "ProductPitched"
 ]
@@ -46,15 +47,15 @@ xgb_model = xgb.XGBClassifier(scale_pos_weight=class_weight, random_state=42)
 
 # Define hyperparameter grid
 param_grid = {
-    'xgbclassifier__n_estimators': [50, 100],        # FILLED
-    'xgbclassifier__max_depth': [3, 5],              # FILLED
-    'xgbclassifier__colsample_bytree': [0.5, 0.7],   # FILLED
-    'xgbclassifier__colsample_bylevel': [0.5, 0.7],  # FILLED
-    'xgbclassifier__learning_rate': [0.05, 0.1],     # FILLED
-    'xgbclassifier__reg_lambda': [0.5, 1],           # FILLED
+    'xgbclassifier__n_estimators': [50, 100],
+    'xgbclassifier__max_depth': [3, 5],
+    'xgbclassifier__colsample_bytree': [0.5, 0.7],
+    'xgbclassifier__colsample_bylevel': [0.5, 0.7],
+    'xgbclassifier__learning_rate': [0.05, 0.1],
+    'xgbclassifier__reg_lambda': [0.5, 1],
 }
 # Model pipeline
-model_pipeline = make_pipeline(preprocessor, xgb_model)   # FILLED
+model_pipeline = make_pipeline(preprocessor, xgb_model)
 
 # Start MLflow run
 with mlflow.start_run():
@@ -77,7 +78,7 @@ with mlflow.start_run():
     best_model = grid_search.best_estimator_
 
     # Set classification threshold
-    classification_threshold = 0.45    # FILLED
+    classification_threshold = 0.45
 
     # Make predictions on the training and test data
     y_pred_train_proba = best_model.predict_proba(Xtrain)[:, 1]
@@ -103,8 +104,8 @@ with mlflow.start_run():
     })
 
     # Save the model next to app.py and log it as an MLflow artifact
-    os.makedirs("MLOps/deployment", exist_ok=True)           # FILLED (creates the folder)
-    model_path = "MLOps/deployment/model.joblib"             # FILLED
-    joblib.dump(best_model, model_path)                      # FILLED
+    os.makedirs("MLOps/deployment", exist_ok=True)
+    model_path = "MLOps/deployment/model.joblib"
+    joblib.dump(best_model, model_path)
     mlflow.log_artifact(model_path, artifact_path="model")
     print(f"Model saved to {model_path}")
